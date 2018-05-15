@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[25]:
+# In[9]:
 
 
 import numpy as np
@@ -11,7 +11,7 @@ directory = "data"
 writingFile = "TrainData"
 
 
-# In[26]:
+# In[10]:
 
 
 # Faulty files
@@ -20,7 +20,7 @@ writingFile = "TrainData"
 # S001C002P005R002A003 - Num of actors not mentioned in some frames
 
 
-# In[27]:
+# In[11]:
 
 
 _spineBase = 0
@@ -83,7 +83,7 @@ quads[23] = _elbowLeft, _tipHandLeft, _kneeRight, _footRight
 quads[24] = _elbowRight, _tipHandRight, _kneeLeft, _footLeft
 
 
-# In[28]:
+# In[12]:
 
 
 fileList = os.listdir(directory)
@@ -131,26 +131,26 @@ for fNum in range (0, len(fileList)):
     file.close()
 
 
-# In[ ]:
+# In[5]:
 
 
 totalFeatures.shape
 
 
-# In[ ]:
+# In[6]:
 
 
 str(totalFeatures).translate({ord(c): None for c in '\n[]'})
 
 
-# In[ ]:
+# In[7]:
 
 
 tf = np.append(totalFeatures, totalFeatures)
 tf.shape
 
 
-# In[ ]:
+# In[8]:
 
 
 str1 = ' '.join(str("%0.4f"%e) for e in totalFeatures).translate({ord(c): None for c in '\n[]'})
@@ -158,7 +158,7 @@ str1 = ' '.join(str("%0.4f"%e) for e in totalFeatures).translate({ord(c): None f
 str1
 
 
-# In[ ]:
+# In[9]:
 
 
 totalFeatures

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[19]:
 
 
 import numpy as np
@@ -13,14 +13,15 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
 dimensions = 150
+batchSize = 4
 
 
-# In[2]:
+# In[20]:
 
 
 class LSTMTagger(nn.Module):
 
-    def __init__(self, tagset_size, embedding_dim=dimensions, hidden_dim=256):
+    def __init__(self, tagset_size, embedding_dim=dimensions, hidden_dim=10):
         super(LSTMTagger, self).__init__()
         self.hidden_dim = hidden_dim
 
@@ -31,21 +32,25 @@ class LSTMTagger(nn.Module):
         self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
         self.hidden = self.init_hidden()
 
-    def init_hidden(self):
+    def init_hidden(self, x=None):
         # Before we've done anything, we dont have any hidden state.
         # Refer to the Pytorch documentation to see exactly
         # why they have this dimensionality.
         # The axes semantics are (num_layers, minibatch_size, hidden_dim)
-        return (Variable(torch.zeros(1, 1, self.hidden_dim)),
-                Variable(torch.zeros(1, 1, self.hidden_dim)))
+        if x==None:
+            return (Variable(torch.zeros(1, batchSize, self.hidden_dim)),
+                    Variable(torch.zeros(1, batchSize, self.hidden_dim)))
+        else:
+            return (Variable(x[0].data),Variable(x[1].data))
 
     def forward(self, sentence):
-        lstm_out, self.hidden = self.lstm(sentence.view(len(sentence), 1, -1), self.hidden)
-        tag_space = self.hidden2tag(lstm_out.view(len(sentence), -1))
+        lstm_out, self.hidden_out = self.lstm(sentence, self.hidden)
+        tag_space = self.hidden2tag(lstm_out[-1])
+        self.hidden=self.init_hidden(self.hidden_out)
         return tag_space
 
 
-# In[3]:
+# In[21]:
 
 
 class NTUQuadsDataset(Dataset):
@@ -76,7 +81,7 @@ class NTUQuadsDataset(Dataset):
         return self.len
 
 
-# In[4]:
+# In[22]:
 
 
 class NTUQuadsDatasetTest(Dataset):
@@ -107,29 +112,36 @@ class NTUQuadsDatasetTest(Dataset):
         return self.len
 
 
-# In[ ]:
+# In[23]:
 
 
 dataset = NTUQuadsDataset()
 train_loader = DataLoader(dataset=dataset,
-                          batch_size=1,
-                          shuffle=False,
+                          batch_size=batchSize,
+                          shuffle=True,
                           num_workers=2)
 
-lstmTagger = LSTMTagger(3, dimensions, 256)
+lstmTagger = LSTMTagger(3, dimensions, 3)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(lstmTagger.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0001)
 
 
-# In[ ]:
+# In[31]:
 
 
-for epoch in range(20):
+for epoch in range(100):
+    for name, param in lstmTagger.named_parameters():
+        if param.requires_grad:
+            print(name, param.data)
     print("Epoch ", epoch, "\n-----")
+    totalLoss = 0
+    
     for i, data in enumerate(train_loader, 0):
         # get the inputs
-        inputs, labels = data        
-        inputs = inputs.view(-1, dimensions)
+        inputs, labels = data
+        inputs = inputs.view(-1, batchSize, dimensions)
+#         inputs = inputs.view(-1, dimensions)
+        
         
         # wrap them in Variable
         inputs, labels = Variable(inputs), Variable(labels)
@@ -139,35 +151,40 @@ for epoch in range(20):
 #         print(epoch, i, "inputs", inputs.data, "labels", labels.data)
         output = lstmTagger(inputs)
 #         print(output)
-        loss = criterion(output[output.shape[0]-1].view(-1, 3), labels)
+#         loss = criterion(output[output.shape[0]-1].view(-1, 3), labels)
+#         print('Output shape is ', output.shape, 'labels shape is', labels.shape)
+        loss = criterion(output, labels)
+        totalLoss += loss.data[0]
         optimizer.zero_grad()
-        loss.backward(retain_graph=True)
+        loss.backward()
         optimizer.step()
+    print('Total Loss in Epoch = ', totalLoss)
 
 
-# In[ ]:
+# In[25]:
 
 
-dataset = NTUQuadsDatasetTest()
-train_loader = DataLoader(dataset=dataset,
-                          batch_size=1,
-                          shuffle=False,
+testDataset = NTUQuadsDataset()
+test_loader = DataLoader(dataset=testDataset,
+                          batch_size=batchSize,
+                          shuffle=True,
                           num_workers=2)
 
 
-# In[ ]:
+# In[26]:
 
 
 correct = 0
 total = 0
-for i, data in enumerate(train_loader, 0):
+for i, data in enumerate(test_loader, 0):
     total = total + 1
  
     # get the inputs
     inputs, labels = data
 #     print(inputs)
     
-    inputs = inputs.view(-1, dimensions)
+    inputs = inputs.view(-1, batchSize, dimensions)
+
         
     # wrap them in Variable
     inputs, labels = Variable(inputs), Variable(labels)
@@ -177,15 +194,15 @@ for i, data in enumerate(train_loader, 0):
     output = lstmTagger(inputs)
 #     print(output)
         
-    sm = F.softmax(output[output.shape[0]-1], dim = 0)
+    sm = F.softmax(output)
     print(sm)
     val, ind = sm.max(0)
     print("Guessed Index ", ind.data,  " Actual Label ",  labels.data)
-    if ind.data.numpy()[0]+1 == labels.data.numpy()[0]:
+    if ind.data.numpy()[0] == labels.data.numpy()[0]:
         correct = correct + 1
 
 
-# In[ ]:
+# In[27]:
 
 
 accuracy = correct/total * 100
@@ -195,17 +212,12 @@ accuracy
 # In[ ]:
 
 
-l = [10, 2, 3]
+a = torch.randn(5, 3, 2)
+a
 
 
 # In[ ]:
 
 
-l.sort()
-
-
-# In[ ]:
-
-
-l
+a[-1]
 
