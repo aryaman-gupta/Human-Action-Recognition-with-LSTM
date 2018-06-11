@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[19]:
+# In[1]:
 
 
 import numpy as np
@@ -16,7 +16,7 @@ dimensions = 150
 batchSize = 4
 
 
-# In[20]:
+# In[2]:
 
 
 class LSTMTagger(nn.Module):
@@ -50,7 +50,7 @@ class LSTMTagger(nn.Module):
         return tag_space
 
 
-# In[21]:
+# In[3]:
 
 
 class NTUQuadsDataset(Dataset):
@@ -81,7 +81,7 @@ class NTUQuadsDataset(Dataset):
         return self.len
 
 
-# In[22]:
+# In[4]:
 
 
 class NTUQuadsDatasetTest(Dataset):
@@ -112,7 +112,7 @@ class NTUQuadsDatasetTest(Dataset):
         return self.len
 
 
-# In[23]:
+# In[5]:
 
 
 dataset = NTUQuadsDataset()
@@ -126,13 +126,13 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(lstmTagger.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0001)
 
 
-# In[31]:
+# In[6]:
 
 
 for epoch in range(100):
-    for name, param in lstmTagger.named_parameters():
-        if param.requires_grad:
-            print(name, param.data)
+#     for name, param in lstmTagger.named_parameters():
+#         if param.requires_grad:
+#             print(name, param.data)
     print("Epoch ", epoch, "\n-----")
     totalLoss = 0
     
@@ -140,7 +140,8 @@ for epoch in range(100):
         # get the inputs
         inputs, labels = data
         inputs = inputs.view(-1, batchSize, dimensions)
-#         inputs = inputs.view(-1, dimensions)
+        print(inputs)
+        print(labels)
         
         
         # wrap them in Variable
@@ -161,7 +162,7 @@ for epoch in range(100):
     print('Total Loss in Epoch = ', totalLoss)
 
 
-# In[25]:
+# In[ ]:
 
 
 testDataset = NTUQuadsDataset()
@@ -171,7 +172,7 @@ test_loader = DataLoader(dataset=testDataset,
                           num_workers=2)
 
 
-# In[26]:
+# In[ ]:
 
 
 correct = 0
@@ -202,7 +203,7 @@ for i, data in enumerate(test_loader, 0):
         correct = correct + 1
 
 
-# In[27]:
+# In[ ]:
 
 
 accuracy = correct/total * 100

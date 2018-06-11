@@ -1,3 +1,9 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
 import numpy as np
 import math
 import scipy as sp
@@ -61,3 +67,4 @@ def SimilarityNormTransform(Pin, Single=False):
         else:
             QuadDescriptor = np.array([P[0, 2], P[1, 2], P[2, 2], P[0, 1], P[1, 1], P[2, 1]])
     return QuadDescriptor
+
